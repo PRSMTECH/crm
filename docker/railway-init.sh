@@ -6,12 +6,31 @@ cd /home/frappe/frappe-bench
 # Configure database connection using Railway environment variables
 if [ -n "$MYSQL_URL" ]; then
     echo "Configuring MariaDB from MYSQL_URL..."
+    echo "MYSQL_URL: $MYSQL_URL"
+
     # Parse Railway's MYSQL_URL (format: mysql://user:pass@host:port/db)
-    export DB_HOST=$(echo $MYSQL_URL | sed -e 's/^.*@//' -e 's/:.*$//')
-    export DB_PORT=$(echo $MYSQL_URL | sed -e 's/^.*://' -e 's/\/.*$//')
-    export DB_NAME=$(echo $MYSQL_URL | sed -e 's/^.*\///')
-    export DB_USER=$(echo $MYSQL_URL | sed -e 's/^mysql:\/\///' -e 's/:.*$//')
-    export DB_PASS=$(echo $MYSQL_URL | sed -e 's/^.*://' -e 's/@.*$//' | head -1)
+    # Remove mysql:// prefix first
+    URL_PART=$(echo $MYSQL_URL | sed 's/^mysql:\/\///')
+
+    # Extract user (before first :)
+    export DB_USER=$(echo $URL_PART | cut -d: -f1)
+
+    # Extract password (between first : and @)
+    export DB_PASS=$(echo $URL_PART | sed 's/^[^:]*://' | sed 's/@.*//')
+
+    # Extract host:port/db (after @)
+    HOST_PART=$(echo $URL_PART | sed 's/^.*@//')
+
+    # Extract host (before :)
+    export DB_HOST=$(echo $HOST_PART | cut -d: -f1)
+
+    # Extract port (between : and /)
+    export DB_PORT=$(echo $HOST_PART | cut -d: -f2 | cut -d/ -f1)
+
+    # Extract database name (after /)
+    export DB_NAME=$(echo $HOST_PART | cut -d/ -f2)
+
+    echo "Parsed - Host: $DB_HOST, Port: $DB_PORT, User: $DB_USER, DB: $DB_NAME"
 
     bench set-mariadb-host $DB_HOST
 fi
@@ -33,11 +52,28 @@ sed -i '/watch/d' ./Procfile 2>/dev/null || true
 # Create site if not exists
 if [ ! -d "sites/crm.localhost" ]; then
     echo "Creating new site..."
-    bench new-site crm.localhost \
-        --force \
-        --mariadb-root-password ${DB_ROOT_PASSWORD:-123} \
-        --admin-password ${ADMIN_PASSWORD:-admin} \
-        --no-mariadb-socket
+    echo "DB_HOST: $DB_HOST"
+    echo "DB_PORT: $DB_PORT"
+    echo "DB_USER: $DB_USER"
+
+    # Use Railway MySQL host if available, otherwise localhost
+    if [ -n "$DB_HOST" ]; then
+        bench new-site crm.localhost \
+            --force \
+            --db-host $DB_HOST \
+            --db-port ${DB_PORT:-3306} \
+            --db-user ${DB_USER:-root} \
+            --db-password "${DB_PASS}" \
+            --mariadb-root-password "${DB_PASS:-${DB_ROOT_PASSWORD:-123}}" \
+            --admin-password ${ADMIN_PASSWORD:-admin} \
+            --no-mariadb-socket
+    else
+        bench new-site crm.localhost \
+            --force \
+            --mariadb-root-password ${DB_ROOT_PASSWORD:-123} \
+            --admin-password ${ADMIN_PASSWORD:-admin} \
+            --no-mariadb-socket
+    fi
 
     bench --site crm.localhost install-app crm
     bench --site crm.localhost set-config developer_mode 0
