@@ -62,8 +62,8 @@ if [ ! -d "sites/crm.localhost" ]; then
             --force \
             --db-host $DB_HOST \
             --db-port ${DB_PORT:-3306} \
-            --db-user ${DB_USER:-root} \
-            --db-password "${DB_PASS}" \
+            --db-root-username ${DB_USER:-root} \
+            --db-root-password "${DB_PASS}" \
             --mariadb-root-password "${DB_PASS:-${DB_ROOT_PASSWORD:-123}}" \
             --admin-password ${ADMIN_PASSWORD:-admin} \
             --no-mariadb-socket
