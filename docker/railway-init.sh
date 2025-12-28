@@ -38,11 +38,12 @@ fi
 # Configure Redis from Railway environment variables
 if [ -n "$REDIS_URL" ]; then
     echo "Configuring Redis from REDIS_URL..."
-    export REDIS_HOST=$(echo $REDIS_URL | sed -e 's/^redis:\/\///' -e 's/:.*$//')
+    echo "REDIS_URL: $REDIS_URL"
 
-    bench set-redis-cache-host $REDIS_HOST
-    bench set-redis-queue-host $REDIS_HOST
-    bench set-redis-socketio-host $REDIS_HOST
+    # Railway Redis URL format: redis://default:password@host:port
+    # For Frappe, we need the full URL with auth
+    export REDIS_FULL_URL="$REDIS_URL"
+    echo "Redis connection: $REDIS_FULL_URL"
 fi
 
 # Remove redis and watch from Procfile (Railway provides these)
@@ -79,6 +80,30 @@ if [ ! -d "sites/crm.localhost" ]; then
     bench --site crm.localhost set-config developer_mode 0
     bench --site crm.localhost set-config mute_emails 0
     bench --site crm.localhost set-config server_script_enabled 1
+fi
+
+# Configure Redis URLs in common site config (applies to all sites)
+if [ -n "$REDIS_URL" ]; then
+    echo "Setting Redis configuration..."
+    # Update common_site_config.json with Redis URLs
+    CONFIG_FILE="sites/common_site_config.json"
+    if [ -f "$CONFIG_FILE" ]; then
+        python3 << EOF
+import json
+with open('$CONFIG_FILE', 'r') as f:
+    config = json.load(f)
+config['redis_cache'] = '$REDIS_URL'
+config['redis_queue'] = '$REDIS_URL'
+config['redis_socketio'] = '$REDIS_URL'
+with open('$CONFIG_FILE', 'w') as f:
+    json.dump(config, f, indent=2)
+print('Redis configuration updated in common_site_config.json')
+EOF
+    else
+        echo '{"redis_cache": "'$REDIS_URL'", "redis_queue": "'$REDIS_URL'", "redis_socketio": "'$REDIS_URL'"}' > "$CONFIG_FILE"
+        echo "Created common_site_config.json with Redis configuration"
+    fi
+    cat "$CONFIG_FILE"
 fi
 
 bench --site crm.localhost clear-cache
