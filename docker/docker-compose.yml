@@ -17,7 +17,7 @@ services:
     image: redis:alpine
 
   frappe:
-    image: frappe/bench:latest
+    image: frappe/bench:v5.22.0
     command: bash /workspace/init.sh
     environment:
       - SHELL=/bin/bash

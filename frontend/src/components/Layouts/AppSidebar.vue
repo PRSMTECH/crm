@@ -159,6 +159,8 @@ import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import CalendarIcon from '@/components/Icons/CalendarIcon.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
+import TeamsIcon from '@/components/Icons/TeamsIcon.vue'
+import AssignmentsIcon from '@/components/Icons/AssignmentsIcon.vue'
 import CollapseSidebar from '@/components/Icons/CollapseSidebar.vue'
 import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
 import HelpIcon from '@/components/Icons/HelpIcon.vue'
@@ -238,6 +240,16 @@ const links = [
     label: 'Calendar',
     icon: CalendarIcon,
     to: 'Calendar',
+  },
+  {
+    label: 'Teams',
+    icon: TeamsIcon,
+    to: 'Teams',
+  },
+  {
+    label: 'Assignments',
+    icon: AssignmentsIcon,
+    to: 'Assignments',
   },
   {
     label: 'Call Logs',

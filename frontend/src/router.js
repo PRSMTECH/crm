@@ -90,6 +90,16 @@ const routes = [
     component: () => import('@/pages/Calendar.vue'),
   },
   {
+    path: '/teams',
+    name: 'Teams',
+    component: () => import('@/pages/Teams.vue'),
+  },
+  {
+    path: '/assignments',
+    name: 'Assignments',
+    component: () => import('@/pages/Assignments.vue'),
+  },
+  {
     path: '/data-import',
     name: 'DataImportList',
     component: () => import('@/pages/DataImport.vue'),
