@@ -6,7 +6,7 @@
   },
   "deploy": {
     "numReplicas": 1,
-    "startCommand": "bench start",
+    "startCommand": "/home/frappe/railway-init.sh",
     "healthcheckPath": "/api/method/frappe.ping",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
